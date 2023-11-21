@@ -1,0 +1,8 @@
+for (glm::vec3& color : image.pixels()){ #parcourir une image
+    color.r = 0.f;
+}
+
+synthèse d'image = RGB de 0 à 1 (pas de 0 à 255);
+
+glm = librairie sur les vecteurs
+
