@@ -2,6 +2,7 @@
 #include <iostream>
 #include "random.hpp"
 #include <math.h>
+#include <corecrt_math_defines.h>
 
 void allGreen(sil::Image &image)
 {
@@ -180,21 +181,20 @@ void rosace(sil::Image &image, int const &rayon, int const &thinkness)
     }
 }
 
-
-[[nodiscard]] sil::Image mosaique(sil::Image const& image, int repetition, bool mirror)
+[[nodiscard]] sil::Image mosaique(sil::Image const &image, int repetition, bool mirror)
 {
     int const mosaique_width = image.width() * repetition;
     int const mosaique_height = image.height() * repetition;
-    sil::Image newImage {mosaique_width,mosaique_height};
+    sil::Image newImage{mosaique_width, mosaique_height};
 
     for (int x{0}; x < mosaique_width; x++)
     {
         for (int y{0}; y < mosaique_height; y++)
         {
 
-            int const newX = x% image.width();
-            int const newY = y% image.height();
-            if (mirror && x/image.width() % 2 == 1)
+            int const newX = x % image.width();
+            int const newY = y % image.height();
+            if (mirror && x / image.width() % 2 == 1)
             {
                 newImage.pixel(x, y) = image.pixel(image.width() - newX - 1, newY);
             }
@@ -202,7 +202,6 @@ void rosace(sil::Image &image, int const &rayon, int const &thinkness)
             {
                 newImage.pixel(x, y) = image.pixel(newX, newY);
             }
-
         }
     }
     return newImage;
@@ -229,7 +228,45 @@ old version avec boucle imbriquée donc pas fou fou
 }
 }*/
 
+[[nodiscard]] sil::Image glitch(sil::Image const &image)
+{
+    sil::Image newImage{image};
+    for (int x{0}; x < image.width(); x++)
+    {
+        for (int y{0}; y < image.height(); y++)
+        {
+            float const random_value = random_float(0.f, 1.f);
+            if (random_value < 0.20)
+            {
+                int const random_width = random_int(0, 30);
+                int const random_height = random_int(0, 10);
+                int const random_x = random_int(0, image.width() - random_width);
+                int const random_y = random_int(0, image.height() - random_height);
 
+                for (int i{0}; i < random_width; i++)
+                {
+                    for (int j{0}; j < random_height; j++)
+                    {
+                        if (x + i < image.width() && y + j < image.height())
+                        {
+                            newImage.pixel(x + i, y + j) = image.pixel(random_x + i, random_y + j);
+                        }
+                    }
+                }
+                x += random_width;
+                y += random_height;
+            }
+            else
+            {
+                if (x < image.width() && y < image.height())
+                {
+                    newImage.pixel(x, y) = image.pixel(x, y);
+                }
+            }
+        }
+    }
+    return newImage;
+}
 
 int main()
 {
@@ -306,7 +343,11 @@ int main()
         mosaiqueImage.save("output/exercice14.png");
     }
     {
-        sil::Image mosaiqueImage{mosaique(image,5,true)};
+        sil::Image mosaiqueImage{mosaique(image, 5, true)};
         mosaiqueImage.save("output/exercice15.png");
+    }
+    {
+        sil::Image glitchImage(glitch(image));
+        glitchImage.save("output/exercice16.png");
     }
 }
