@@ -141,20 +141,36 @@ void luminosity(sil::Image &image, bool sombre)
     }
 }
 
-void disk()
+[[nodiscard]] sil::Image disk()
 {
     sil::Image image{500 /*width*/, 500 /*height*/};
     for (int x{0}; x < image.width(); x++)
     {
         for (int y{0}; y < image.height(); y++)
         {
-            if (x > 200 && x < 300 && y > 200 && y < 300)
+            if (std::pow(x - (image.width()/2),2)+ std::pow(y - image.height()/2,2) < 10000)
             {
                 image.pixel(x, y) = glm::vec3(1);
             }
         }
     }
-    image.save("output/exercice11.png");
+    return image;
+}
+
+[[nodiscard]] sil::Image circle(float thickess)
+{
+    sil::Image image{500,500};
+    for (int x{0}; x < image.width(); x++)
+    {
+        for (int y{0}; y < image.height(); y++)
+        {
+            if ((std::pow(x - (image.width()/2),2)+ std::pow(y - image.height()/2,2) < 10000 + thickess) && (std::pow(x - (image.width()/2),2)+ std::pow(y - image.height()/2,2) > 10000 - thickess ))
+            {
+                image.pixel(x, y) = glm::vec3(1);
+            }
+        }
+    }
+    return image;
 }
 
 int main()
@@ -211,5 +227,13 @@ int main()
         sil::Image copy{photo};
         luminosity(copy, false);
         copy.save("output/exercice10.png");
+    }
+    {
+        sil::Image diskImage{disk()};
+        diskImage.save("output/exercice11.png");
+    }
+    {
+        sil::Image circleImage{circle(500)};
+        circleImage.save("output/exercice12.png");
     }
 }
