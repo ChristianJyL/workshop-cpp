@@ -45,7 +45,7 @@ void negatif(sil::Image &image)
         float const value = static_cast<float>(x) / (image.width() - 1);
         for (int y{0}; y < image.height(); y++)
         {
-            image.pixel(x,y) = glm::vec3(value);
+            image.pixel(x, y) = glm::vec3(value);
         }
     }
     return image;
@@ -69,7 +69,7 @@ void noise(sil::Image &image)
         float random_value = random_float(0.f, 1.f);
         if (random_value < 0.33)
         {
-            color = glm::vec3(random_float(0.f, 1.f),random_float(0.f, 1.f),random_float(0.f, 1.f));
+            color = glm::vec3(random_float(0.f, 1.f), random_float(0.f, 1.f), random_float(0.f, 1.f));
         }
     }
 }
@@ -141,36 +141,43 @@ void luminosity(sil::Image &image, bool sombre)
     }
 }
 
-[[nodiscard]] sil::Image disk()
+void disk(sil::Image &image, int rayon)
 {
-    sil::Image image{500 /*width*/, 500 /*height*/};
     for (int x{0}; x < image.width(); x++)
     {
         for (int y{0}; y < image.height(); y++)
         {
-            if (std::pow(x - (image.width()/2),2)+ std::pow(y - image.height()/2,2) < 10000)
+            if (std::pow(x - (image.width() / 2), 2) + std::pow(y - image.height() / 2, 2) < (std::pow(rayon, 2)))
             {
                 image.pixel(x, y) = glm::vec3(1);
             }
         }
     }
-    return image;
 }
 
-[[nodiscard]] sil::Image circle(float thickess)
+void circle(sil::Image &image, int const& rayon, float const &thickess, int const& center_x, int const& center_y)
 {
-    sil::Image image{500,500};
     for (int x{0}; x < image.width(); x++)
     {
         for (int y{0}; y < image.height(); y++)
         {
-            if ((std::pow(x - (image.width()/2),2)+ std::pow(y - image.height()/2,2) < 10000 + thickess) && (std::pow(x - (image.width()/2),2)+ std::pow(y - image.height()/2,2) > 10000 - thickess ))
+            if ((std::pow(x - center_x, 2) + std::pow(y - center_y, 2) < std::pow(rayon,2) + thickess) && (std::pow(x - center_x, 2) + std::pow(y - center_y, 2) > std::pow(rayon,2) - thickess))
             {
                 image.pixel(x, y) = glm::vec3(1);
             }
         }
     }
-    return image;
+}
+
+ void rosace(sil::Image &image, int const& rayon, int const& thinkness)
+{
+    int const center_x = image.width()/2;
+    int const center_y = image.height()/2;
+    circle(image, rayon, thinkness, center_x , center_y);
+    for (int i {0} ; i <6; i++)
+    {
+        circle(image, rayon, thinkness, center_x + rayon * std::cos(i*(M_PI/3)), center_x + rayon* std::sin(i*(M_PI/3)));
+    }
 }
 
 int main()
@@ -216,7 +223,7 @@ int main()
         copy.save("output/exercice7.png");
     }
     {
-        sil::Image rotateImage {rotate(image)};
+        sil::Image rotateImage{rotate(image)};
         rotateImage.save("output/exercice8.png");
     }
     {
@@ -229,11 +236,18 @@ int main()
         copy.save("output/exercice10.png");
     }
     {
-        sil::Image diskImage{disk()};
-        diskImage.save("output/exercice11.png");
+        sil::Image image{500, 500};
+        disk(image, 100);
+        image.save("output/exercice11.png");
     }
     {
-        sil::Image circleImage{circle(500)};
-        circleImage.save("output/exercice12.png");
+        sil::Image image{500, 500};
+        circle(image, 100, 500, image.width()/2, image.height()/2);
+        image.save("output/exercice12.png");
+    }
+    {
+        sil::Image image{500, 500};
+        rosace(image, 100, 500);
+        image.save("output/exercice13.png");
     }
 }
