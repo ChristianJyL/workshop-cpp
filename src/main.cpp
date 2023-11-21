@@ -3,66 +3,55 @@
 #include "random.hpp"
 #include <math.h>
 
-void allGreen(sil::Image image)
+void allGreen(sil::Image &image)
 {
     for (glm::vec3 &color : image.pixels())
     {
         color.r = 0.f;
         color.b = 0.f;
     }
-    image.save("output/exercice1.png");
 }
 
-void inverseCanals(sil::Image image)
+void inverseCanals(sil::Image &image)
 {
     for (glm::vec3 &color : image.pixels())
     {
         std::swap(color.r, color.b);
     }
-    image.save("output/exercice2.png");
 }
 
-void blackAndWhite(sil::Image image)
+void blackAndWhite(sil::Image &image)
 {
     for (glm::vec3 &color : image.pixels())
     {
-        float average = (color.r + color.g + color.b) / 3.f;
-        color.r = average;
-        color.g = average;
-        color.b = average;
+        float const average = (color.r + color.g + color.b) / 3.f;
+        color = glm::vec3{average};
     }
-    image.save("output/exercice3.png");
 }
 
-void negatif(sil::Image image)
+void negatif(sil::Image &image)
 {
     for (glm::vec3 &color : image.pixels())
     {
-        color.r = 1 - color.r;
-        color.g = 1 - color.g;
-        color.b = 1 - color.b;
+        color = 1.f - color;
     }
-    image.save("output/exercice4.png");
 }
 
-void degrade()
+[[nodiscard]] sil::Image degrade()
 {
     sil::Image image{300 /*width*/, 200 /*height*/};
-    // On passe sur tous les x et tous les y, et on accède au pixel correspondant :
     for (int x{0}; x < image.width(); x++)
     {
-        float value = static_cast<float>(x) / image.width();
+        float const value = static_cast<float>(x) / (image.width() - 1);
         for (int y{0}; y < image.height(); y++)
         {
-            image.pixel(x, y).r = value;
-            image.pixel(x, y).b = value;
-            image.pixel(x, y).g = value;
+            image.pixel(x,y) = glm::vec3(value);
         }
     }
-    image.save("output/exercice5.png");
+    return image;
 }
 
-void mirror(sil::Image image)
+void mirror(sil::Image &image)
 {
     for (int x{0}; x < image.width() / 2; x++)
     {
@@ -71,25 +60,21 @@ void mirror(sil::Image image)
             std::swap(image.pixel(x, y), image.pixel(image.width() - 1 - x, y));
         }
     }
-    image.save("output/exercice6.png");
 }
 
-void noise(sil::Image image)
+void noise(sil::Image &image)
 {
     for (glm::vec3 &color : image.pixels())
     {
-        int random_value = random_int(1, 5);
-        if (random_value == 1)
+        float random_value = random_float(0.f, 1.f);
+        if (random_value < 0.33)
         {
-            color.r = random_float(0.f, 1.f);
-            color.g = random_float(0.f, 1.f);
-            color.b = random_float(0.f, 1.f);
+            color = glm::vec3(random_float(0.f, 1.f),random_float(0.f, 1.f),random_float(0.f, 1.f));
         }
     }
-    image.save("output/exercice7.png");
 }
 
-void rotate(sil::Image image)
+[[nodiscard]] sil::Image rotate(sil::Image const &image)
 {
     sil::Image rotateImage{image.height(), image.width()};
 
@@ -100,68 +85,131 @@ void rotate(sil::Image image)
             rotateImage.pixel(y, x) = image.pixel(x, image.height() - y - 1);
         }
     }
-    rotateImage.save("output/exercice8.png");
+    return rotateImage;
 }
 
-void RGBSplit(sil::Image image)
+[[nodiscard]] sil::Image RGBSplit(sil::Image const &image)
 {
     sil::Image newImage{image};
     for (int x{0}; x < image.width(); x++)
     {
         for (int y{0}; y < image.height(); y++)
         {
+            int final_x_forward;
+            int final_x_backward;
             if (x + 30 <= image.width() - 1)
             {
-                newImage.pixel(x, y).b = image.pixel(x + 30, y).b;
+                final_x_forward = x + 30;
             }
             else
             {
-                newImage.pixel(x, y).b = image.pixel(image.width()-1, y).b;
+                final_x_forward = image.width() - 1;
             }
             if (x - 30 >= 0)
             {
-                newImage.pixel(x, y).r = image.pixel(x - 30, y).r;
+                final_x_backward = x - 30;
             }
             else
             {
-                newImage.pixel(x, y).r = image.pixel(0, y).r;
+                final_x_backward = 0;
+            }
+
+            // int const final_x = x + 30 <= image.width() - 1
+            //                         ? x + 30
+            //                         : image.width() - 1;
+            newImage.pixel(x, y).b = image.pixel(final_x_backward, y).r;
+            newImage.pixel(x, y).r = image.pixel(final_x_forward, y).r;
+        }
+    }
+    return newImage;
+}
+
+void luminosity(sil::Image &image, bool sombre)
+{
+    float puissance{0};
+    if (sombre)
+    {
+        puissance = 2;
+    }
+    else
+    {
+        puissance = 0.5;
+    }
+    for (glm::vec3 &color : image.pixels())
+    {
+        color = glm::pow(color, glm::vec3{puissance});
+    }
+}
+
+void disk()
+{
+    sil::Image image{500 /*width*/, 500 /*height*/};
+    for (int x{0}; x < image.width(); x++)
+    {
+        for (int y{0}; y < image.height(); y++)
+        {
+            if (x > 200 && x < 300 && y > 200 && y < 300)
+            {
+                image.pixel(x, y) = glm::vec3(1);
             }
         }
     }
-    newImage.save("output/exercice9.png");
-}
-
-
-void luminosity(sil::Image image, bool sombre)
-{
-    float puissance {0};
-    if (sombre){
-        puissance = 2;
-    }
-    else{
-        puissance = 0.5;
-    }
-    for (glm::vec3 &color : image.pixels()){
-        color.r = std::pow(color.r, puissance);
-        color.b = std::pow(color.b, puissance);
-        color.g = std::pow(color.g, puissance);
-    }
-    image.save("output/exercice10.png");
-
+    image.save("output/exercice11.png");
 }
 
 int main()
 {
     sil::Image image{"images/logo.png"};
     sil::Image photo{"images/photo.jpg"};
-    allGreen(image);
-    inverseCanals(image);
-    blackAndWhite(image);
-    negatif(image);
-    degrade();
-    mirror(image);
-    noise(image);
-    rotate(image);
-    RGBSplit(image);
-    luminosity(photo, false);
+
+    {
+        sil::Image copy{image};
+        allGreen(copy);
+        copy.save("output/exercice1.png");
+    }
+
+    {
+        sil::Image copy{image};
+        inverseCanals(copy);
+        copy.save("output/exercice2.png");
+    }
+
+    {
+        sil::Image copy{image};
+        blackAndWhite(copy);
+        copy.save("output/exercice3.png");
+    }
+
+    {
+        sil::Image copy{image};
+        negatif(copy);
+        copy.save("output/exercice4.png");
+    }
+    {
+        sil::Image degradeImage{degrade()};
+        degradeImage.save("output/exercice5.png");
+    }
+    {
+        sil::Image copy{image};
+        mirror(copy);
+        copy.save("output/exercice6.png");
+    }
+    {
+        sil::Image copy{image};
+        noise(copy);
+        copy.save("output/exercice7.png");
+    }
+    {
+        sil::Image rotateImage {rotate(image)};
+        rotateImage.save("output/exercice8.png");
+    }
+    {
+        sil::Image rgbImage{RGBSplit(image)};
+        rgbImage.save("output/exercice9.png");
+    }
+    {
+        sil::Image copy{photo};
+        luminosity(copy, false);
+        copy.save("output/exercice10.png");
+    }
 }
