@@ -238,19 +238,16 @@ old version avec boucle imbriquée donc pas fou fou
             float const random_value = random_float(0.f, 1.f);
             if (random_value < 0.20)
             {
-                int const random_width = random_int(0, 30);
-                int const random_height = random_int(0, 10);
-                int const random_x = random_int(0, image.width() - random_width);
-                int const random_y = random_int(0, image.height() - random_height);
+                int const random_width = random_int(1, 25);
+                int const random_height = random_int(1, 10);
+                int const random_x = random_int(1, image.width() - random_width);
+                int const random_y = random_int(1, image.height() - random_height);
 
-                for (int i{0}; i < random_width; i++)
+                for (int i = 0; i < random_width && x + i < image.width(); i++)
                 {
-                    for (int j{0}; j < random_height; j++)
+                    for (int j = 0; j < random_height && y + j < image.height(); j++)
                     {
-                        if (x + i < image.width() && y + j < image.height())
-                        {
-                            newImage.pixel(x + i, y + j) = image.pixel(random_x + i, random_y + j);
-                        }
+                        newImage.pixel(x + i, y + j) = image.pixel(random_x + i, random_y + j);
                     }
                 }
                 x += random_width;
