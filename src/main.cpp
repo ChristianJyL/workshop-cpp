@@ -288,29 +288,59 @@ glm::vec2 rotated(glm::vec2 point, glm::vec2 center_of_rotation, float angle)
     return glm::vec2{glm::rotate(glm::mat3{1.f}, angle) * glm::vec3{point - center_of_rotation, 0.f}} + center_of_rotation;
 }
 
-[[nodiscard]] sil::Image vortex(sil::Image const&image)
+[[nodiscard]] sil::Image vortex(sil::Image const &image)
 {
     sil::Image newImage{image};
-    int const center_x{image.width()/2};
-    int const center_y{image.height()/2};
+    int const center_x{image.width() / 2};
+    int const center_y{image.height() / 2};
 
     for (int x{0}; x < image.width(); x++)
     {
         for (int y{0}; y < image.height(); y++)
         {
-            float const angle =glm::distance(glm::vec2(x,y), glm::vec2(center_x, center_y))/10.f;
-            glm::vec2 const new_position = rotated(glm::vec2{x, y}, glm::vec2{center_x, center_y}, angle);
+            float const angle = glm::distance(glm::vec2(x, y), glm::vec2(center_x, center_y)) / 10.f;
+            glm::vec2 const new_position = rotated(glm::vec2(x, y), glm::vec2(center_x, center_y), angle);
             if (new_position.x < image.width() && new_position.y < image.height() && new_position.x > 0 && new_position.y > 0)
             {
                 newImage.pixel(x, y) = image.pixel(new_position.x, new_position.y);
             }
             else
             {
-                newImage.pixel(x,y) = glm::vec3(0);
+                newImage.pixel(x, y) = glm::vec3(0);
             }
         }
     }
     return newImage;
+}
+
+void dithering(sil::Image &image)
+{
+    const int bayer_n = 4;
+    float bayer_matrix_4x4[][bayer_n] = {
+        {-0.5, 0, -0.375, 0.125},
+        {0.25, -0.25, 0.375, -0.125},
+        {-0.3125, 0.1875, -0.4375, 0.0625},
+        {0.4375, -0.0625, 0.3125, -0.1875},
+    };
+
+    blackAndWhite(image);
+
+    for (int y{0}; y < image.height(); y++)
+    {
+        for (int x{0}; x < image.width(); x++)
+        {
+            float origin_color = image.pixel(x, y).r;
+            float bayer_value = bayer_matrix_4x4[y % bayer_n][x % bayer_n];
+            float output_color = origin_color + (1 * bayer_value);
+
+            if (output_color <  1/2.f){
+                image.pixel(x,y) = glm::vec3(0);
+            }else{
+                image.pixel(x,y) = glm::vec3(1);
+            }
+            
+        }
+    }
 }
 
 int main()
@@ -402,7 +432,12 @@ int main()
         copy.save("output/exercice16.png");
     }
     {
-        sil::Image vortexImage{ vortex(image)};
+        sil::Image vortexImage{vortex(image)};
         vortexImage.save("output/exercice17.png");
+    }
+    {
+        sil::Image copy{photo};
+        dithering(copy);
+        copy.save("output/exercice18.png");
     }
 }
