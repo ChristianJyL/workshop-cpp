@@ -2,7 +2,7 @@
 #include <iostream>
 #include "random.hpp"
 #include <math.h>
-#include <corecrt_math_defines.h>
+#include <glm/gtx/matrix_transform_2d.hpp>
 
 void allGreen(sil::Image &image)
 {
@@ -228,33 +228,85 @@ old version avec boucle imbriquée donc pas fou fou
 }
 }*/
 
-[[nodiscard]] sil::Image glitch(sil::Image const &image)
+void glitch(sil::Image &image)
 {
-    sil::Image newImage{image};
     for (int x{0}; x < image.width(); x++)
     {
         for (int y{0}; y < image.height(); y++)
         {
             float const random_value = random_float(0.f, 1.f);
-            if (random_value < 0.10f)
+            if (random_value < 0.001f)
             {
-                //std::cout << "glitch à la position " << x << " " << y << std::endl;
-                int const random_width = random_int(1, 25);
+                // std::cout << "glitch à la position " << x << " " << y << std::endl;
+                int const random_width = random_int(1, 30);
                 int const random_height = random_int(1, 10);
                 int const random_x = random_int(1, image.width() - random_width);
                 int const random_y = random_int(1, image.height() - random_height);
 
-                for (int i{0}; i < random_width && x + i < image.width(); i++)
+                for (int i{0}; i < random_width; i++)
                 {
-                    for (int j{0}; j < random_height && y + j < image.height(); j++)
+                    if (x + i < image.width() && random_x + i < image.width())
                     {
-                        std::swap(newImage.pixel(x + i, y + j), newImage.pixel(random_x + i, random_y + j));
+                        std::swap(image.pixel(x + i, y), image.pixel(random_x + i, random_y));
+                    }
+                    for (int j{0}; j < random_height; j++)
+                    {
+                        if (y + j < image.height() && random_y + j < image.height() && random_x + i < image.width() && x + i < image.width())
+                        {
+                            std::swap(image.pixel(x + i, y + j), image.pixel(random_x + i, random_y + j));
+                        }
                     }
                 }
-                
-                x += random_width;
-                y += random_height;
+            }
+        }
+    }
+}
 
+void glitch2(sil::Image &image, int number_of_glitch)
+{
+    for (int i{0}; i < number_of_glitch; i++)
+    {
+        int const random_width = random_int(1, 25);
+        int const random_height = random_int(1, 10);
+        int const random_x1 = random_int(1, image.width() - random_width);
+        int const random_y1 = random_int(1, image.height() - random_height);
+        int const random_x2 = random_int(1, image.width() - random_width);
+        int const random_y2 = random_int(1, image.height() - random_height);
+
+        for (int x{0}; x < random_width; x++)
+        {
+            for (int y{0}; y < random_height; y++)
+            {
+                std::swap(image.pixel(random_x1 + x, random_y1 + y), image.pixel(random_x2 + x, random_y2 + y));
+            }
+        }
+    }
+}
+
+glm::vec2 rotated(glm::vec2 point, glm::vec2 center_of_rotation, float angle)
+{
+    return glm::vec2{glm::rotate(glm::mat3{1.f}, angle) * glm::vec3{point - center_of_rotation, 0.f}} + center_of_rotation;
+}
+
+[[nodiscard]] sil::Image vortex(sil::Image const&image)
+{
+    sil::Image newImage{image};
+    int const center_x{image.width()/2};
+    int const center_y{image.height()/2};
+
+    for (int x{0}; x < image.width(); x++)
+    {
+        for (int y{0}; y < image.height(); y++)
+        {
+            float const angle =glm::distance(glm::vec2(x,y), glm::vec2(center_x, center_y))/10.f;
+            glm::vec2 const new_position = rotated(glm::vec2{x, y}, glm::vec2{center_x, center_y}, angle);
+            if (new_position.x < image.width() && new_position.y < image.height() && new_position.x > 0 && new_position.y > 0)
+            {
+                newImage.pixel(x, y) = image.pixel(new_position.x, new_position.y);
+            }
+            else
+            {
+                newImage.pixel(x,y) = glm::vec3(0);
             }
         }
     }
@@ -340,7 +392,17 @@ int main()
         mosaiqueImage.save("output/exercice15.png");
     }
     {
-        sil::Image glitchImage(glitch(image));
-        glitchImage.save("output/exercice16.png");
+        sil::Image copy{image};
+        glitch(copy);
+        copy.save("output/exercice16.png");
+    }
+    {
+        sil::Image copy{image};
+        glitch2(copy, 100);
+        copy.save("output/exercice16.png");
+    }
+    {
+        sil::Image vortexImage{ vortex(image)};
+        vortexImage.save("output/exercice17.png");
     }
 }
