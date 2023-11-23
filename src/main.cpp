@@ -170,14 +170,14 @@ void circle(sil::Image &image, int const &rayon, float const &thickess, int cons
     }
 }
 
-void rosace(sil::Image &image, int const &rayon, int const &thinkness)
+void rosace(sil::Image &image, int const &rayon, int const &thinkness, int nbCircle)
 {
     int const center_x = image.width() / 2;
     int const center_y = image.height() / 2;
     circle(image, rayon, thinkness, center_x, center_y);
-    for (int i{0}; i < 6; i++)
+    for (int i{0}; i < nbCircle; i++)
     {
-        circle(image, rayon, thinkness, center_x + rayon * std::cos(i * (M_PI / 3)), center_x + rayon * std::sin(i * (M_PI / 3)));
+        circle(image, rayon, thinkness, center_x + rayon * std::cos(i * (M_PI * 2 / nbCircle)), center_x + rayon * std::sin(i * (M_PI * 2 / nbCircle)));
     }
 }
 
@@ -333,15 +333,113 @@ void dithering(sil::Image &image)
             float bayer_value = bayer_matrix_4x4[y % bayer_n][x % bayer_n];
             float output_color = origin_color + (1 * bayer_value);
 
-            if (output_color <  1/2.f){
-                image.pixel(x,y) = glm::vec3(0);
-            }else{
-                image.pixel(x,y) = glm::vec3(1);
+            if (output_color < 1 / 2.f)
+            {
+                image.pixel(x, y) = glm::vec3(0);
             }
-            
+            else
+            {
+                image.pixel(x, y) = glm::vec3(1);
+            }
         }
     }
 }
+
+[[nodiscard]] sil::Image convolution(sil::Image const &image, std::vector<std::vector<float>> const& kernel)
+{
+    sil::Image blurImage{image};
+
+    float kernelTotal{0};
+    for (std::vector<float> line : kernel)
+    {
+        for (float number : line)
+        {
+            kernelTotal += number;
+        }
+    }
+
+    for (int x{0}; x < image.width(); x++)
+    {
+        for (int y{0}; y < image.height(); y++)
+        {
+            // prendre les 9 pixels autour de mon pixel x,y dans image
+            // et faire la couleur moyenne
+
+            glm::vec3 color{0};
+            int count{0};
+            int debug{-(static_cast<int>(kernel.size()) / 2)};
+            for (int i{-(static_cast<int>(kernel.size()) / 2)}; i < static_cast<int>(kernel.size()); i++)
+            {
+                for (int j{-(static_cast<int>(kernel[0].size()) / 2)}; j < static_cast<int>(kernel[0].size()); j++)
+                {
+                    int coordX = x + i;
+                    int coordY = y + j;
+                    if (coordX < image.width() && coordX > 0 && coordY < image.height() && coordY > 0 && j + static_cast<int>(kernel[0].size()) / 2 < kernel[0].size() && i + static_cast<int>(kernel.size()) / 2 < kernel.size())
+                    {
+                        color += image.pixel(coordX, coordY) * kernel.at(i + static_cast<int>(kernel.size()) / 2).at(j + static_cast<int>(kernel[0].size()) / 2);
+                    }
+                    else
+                    {
+                        blurImage.pixel(x, y) += glm::vec3(0);
+                    }
+                }
+            }
+            if (kernelTotal != 0)
+            {
+                color = color / kernelTotal;
+            }
+            blurImage.pixel(x, y) = color;
+        }
+    }
+    return blurImage;
+}
+
+std::vector<std::vector<float>> generateKernelBlurVertical(int size)
+{
+    std::vector<std::vector<float>> kernel(size, std::vector<float>(1, 1.f / size));
+    return kernel;
+}
+
+std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
+{
+    std::vector<std::vector<float>> kernel(1, std::vector<float>(size, 1.f / size));
+    return kernel;
+}
+
+[[nodiscard]] sil::Image differenceGaussian(sil::Image const& image , int sigma1, int sigma2){
+    sil::Image gaussian1{image};
+    sil::Image gaussian2{image};
+    sil::Image result{image.width() , image.height()};
+
+    gaussian1 = convolution(gaussian1, generateKernelBlurHorizontal(sigma1));
+    gaussian1 = convolution(gaussian1, generateKernelBlurVertical(sigma1));
+
+    gaussian2 = convolution(gaussian2, generateKernelBlurHorizontal(sigma2));
+    gaussian2 = convolution(gaussian2, generateKernelBlurVertical(sigma2));
+
+    for (int x{0}; x < image.width(); x++)
+    {
+        for (int y{0}; y < image.height(); y++)
+        {
+            result.pixel(x,y)=  gaussian1.pixel(x,y) - gaussian2.pixel(x,y);
+        }
+    }
+    //tout les pixels qui sont noir on les met en blanc et les pixels en nuance de gris en noir
+    for (glm::vec3 &color : result.pixels())
+    {
+        if (color.r < 0.019f)
+        {
+            color = glm::vec3(1);
+        }
+        else
+        {
+            color = glm::vec3(0);
+        }
+    }
+    
+    return result;
+}
+
 
 int main()
 {
@@ -410,7 +508,7 @@ int main()
     }
     {
         sil::Image blackImage{500, 500};
-        rosace(blackImage, 100, 500);
+        rosace(blackImage, 100, 500, 6);
         blackImage.save("output/exercice13.png");
     }
     {
@@ -439,5 +537,48 @@ int main()
         sil::Image copy{photo};
         dithering(copy);
         copy.save("output/exercice18.png");
+    }
+    {
+        std::vector<std::vector<float>> kernelOutline = {
+            {-1, -1, -1},
+            {-1, 8, -1},
+            {-1, -1, -1}};
+
+        std::vector<std::vector<float>> kernelBlur3x3 = {{1, 2, 1},
+                                                         {2, 4, 2},
+                                                         {1, 2, 1}};
+
+        std::vector<std::vector<float>> kernelEmboss = {{-2, -1, 1},
+                                                        {-1, 1, 1},
+                                                        {0, 1, 2}};
+
+        std::vector<std::vector<float>> kernelSharpen = {{0, -1, 0},
+                                                         {-1, 5, 1},
+                                                         {0, -1, 0}};
+
+        std::vector<std::vector<float>> kernelBlur5x5 = {{1, 4, 6, 4, 1},
+                                                         {4, 16, 24, 16, 4},
+                                                         {6, 24, 36, 24, 6},
+                                                         {4, 16, 24, 16, 4},
+                                                         {1, 4, 6, 4, 1}};
+
+        sil::Image copy{image};
+        sil::Image blurImage{convolution(copy, kernelBlur5x5)};
+        blurImage.save("output/exercice19.png");
+    }
+
+    {
+        // Separation matrix (more efficient)
+        std::vector<std::vector<float>> kernelBlurHorizontal{{1, 1, 1}};
+        std::vector<std::vector<float>> kernelBlurVertical {{1}, {1}, {1}};
+        sil::Image blurImage{convolution(image, kernelBlurHorizontal)};
+        blurImage = convolution(blurImage, kernelBlurVertical);
+        blurImage.save("output/exercice19FiltreSepare.png");
+    }
+
+    {
+
+        sil::Image imageDifference{differenceGaussian(photo, 1, 5)};
+        imageDifference.save("output/exercice19Difference.png");
     }
 }
