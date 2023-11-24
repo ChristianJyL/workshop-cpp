@@ -3,6 +3,8 @@
 #include "random.hpp"
 #include <math.h>
 #include <glm/gtx/matrix_transform_2d.hpp>
+#include <utility>
+
 
 void allGreen(sil::Image &image)
 {
@@ -345,7 +347,7 @@ void dithering(sil::Image &image)
     }
 }
 
-[[nodiscard]] sil::Image convolution(sil::Image const &image, std::vector<std::vector<float>> const& kernel)
+[[nodiscard]] sil::Image convolution(sil::Image const &image, std::vector<std::vector<float>> const &kernel)
 {
     sil::Image blurImage{image};
 
@@ -406,10 +408,11 @@ std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
     return kernel;
 }
 
-[[nodiscard]] sil::Image differenceGaussian(sil::Image const& image , int sigma1, int sigma2){
+[[nodiscard]] sil::Image differenceGaussian(sil::Image const &image, int sigma1, int sigma2)
+{
     sil::Image gaussian1{image};
     sil::Image gaussian2{image};
-    sil::Image result{image.width() , image.height()};
+    sil::Image result{image.width(), image.height()};
 
     gaussian1 = convolution(gaussian1, generateKernelBlurHorizontal(sigma1));
     gaussian1 = convolution(gaussian1, generateKernelBlurVertical(sigma1));
@@ -421,10 +424,10 @@ std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
     {
         for (int y{0}; y < image.height(); y++)
         {
-            result.pixel(x,y)=  gaussian1.pixel(x,y) - gaussian2.pixel(x,y);
+            result.pixel(x, y) = gaussian1.pixel(x, y) - gaussian2.pixel(x, y);
         }
     }
-    //tout les pixels qui sont noir on les met en blanc et les pixels en nuance de gris en noir
+    // tout les pixels qui sont noir on les met en blanc et les pixels en nuance de gris en noir
     for (glm::vec3 &color : result.pixels())
     {
         if (color.r < 0.019f)
@@ -436,10 +439,128 @@ std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
             color = glm::vec3(0);
         }
     }
-    
+
     return result;
 }
 
+[[nodiscard]] sil::Image kuwahara(sil::Image image)
+{
+    sil::Image kuwaharaImage{image.width(), image.height()};
+
+    std::vector<std::pair<glm::vec3,float>> listRegion;
+    std::pair<glm::vec3, float> pair;
+
+    for (int x{0}; x < image.width(); x++)
+    {
+        for (int y{0}; y < image.height(); y++)
+        {
+
+
+
+            glm::vec3 averageColor{};
+            glm::vec3 averageColor2{};
+            glm::vec3 averageColor3{};
+            glm::vec3 averageColor4{};
+            float standardDeviation{0};
+            float standardDeviation2{0};
+            float standardDeviation3{0};
+            float standardDeviation4{0};
+
+            if (x - 2 > 0 && x - 1 > 0 && y + 1 < image.height() && y + 2 < image.height())
+            {
+                averageColor = image.pixel(x - 2, y + 2);
+                averageColor += image.pixel(x - 2, y + 1);
+                averageColor += image.pixel(x - 1, y + 2);
+                averageColor += image.pixel(x - 1, y + 1);
+                averageColor = averageColor / 4.f;
+
+                standardDeviation = std::pow(image.pixel(x - 2, y + 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x - 2, y + 1).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x - 1, y + 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x - 1, y + 1).r - averageColor.r, 2);
+                standardDeviation = standardDeviation / 4.f;
+                standardDeviation = std::sqrt(standardDeviation);
+
+                pair.first = averageColor;
+                pair.second= standardDeviation;
+                listRegion.push_back(pair);
+            }
+
+            if (x + 2 < image.width() && x + 1 < image.width() && y + 1 < image.height() && y + 2 < image.height())
+            {
+                averageColor = image.pixel(x + 2, y + 2);
+                averageColor += image.pixel(x + 2, y + 1);
+                averageColor += image.pixel(x + 1, y + 2);
+                averageColor += image.pixel(x + 1, y + 1);
+                averageColor = averageColor2 / 4.f;
+
+                standardDeviation2 = std::pow(image.pixel(x + 2, y + 2).r - averageColor2.r, 2);
+                standardDeviation2 += std::pow(image.pixel(x + 2, y + 1).r - averageColor2.r, 2);
+                standardDeviation2 += std::pow(image.pixel(x + 1, y + 2).r - averageColor2.r, 2);
+                standardDeviation2 += std::pow(image.pixel(x + 1, y + 1).r - averageColor2.r, 2);
+                standardDeviation2 = standardDeviation2 / 4.f;
+                standardDeviation2 = std::sqrt(standardDeviation2);
+
+                pair.first = averageColor;
+                pair.second= standardDeviation;
+                listRegion.push_back(pair);
+            }
+
+            if (x - 2 > 0 && x - 1 > 0 && y - 1 > 0 && y - 2 > 0)
+            {
+                averageColor3 = image.pixel(x - 2, y - 2);
+                averageColor3 += image.pixel(x - 2, y - 1);
+                averageColor3 += image.pixel(x - 1, y - 2);
+                averageColor3 += image.pixel(x - 1, y - 1);
+                averageColor3 = averageColor3 / 4.f;
+
+                standardDeviation3 = std::pow(image.pixel(x - 2, y - 2).r - averageColor3.r, 2);
+                standardDeviation3 += std::pow(image.pixel(x - 2, y - 1).r - averageColor3.r, 2);
+                standardDeviation3 += std::pow(image.pixel(x - 1, y - 2).r - averageColor3.r, 2);
+                standardDeviation3 += std::pow(image.pixel(x - 1, y - 1).r - averageColor3.r, 2);
+
+                standardDeviation3 = standardDeviation3 / 4.f;
+                standardDeviation3 = std::sqrt(standardDeviation3);
+            }
+
+            if (x + 2 < image.width() && x + 1 < image.width() && y - 1 > 0 && y - 2 > 0)
+            {
+                averageColor4 = image.pixel(x + 2, y - 2);
+                averageColor4 += image.pixel(x + 2, y - 1);
+                averageColor4 += image.pixel(x + 1, y - 2);
+                averageColor4 += image.pixel(x + 1, y - 1);
+                averageColor4 = averageColor4 / 4.f;
+
+                standardDeviation4 = std::pow(image.pixel(x + 2, y - 2).r - averageColor4.r, 2);
+                standardDeviation4 += std::pow(image.pixel(x + 2, y - 1).r - averageColor4.r, 2);
+                standardDeviation4 += std::pow(image.pixel(x + 1, y - 2).r - averageColor4.r, 2);
+                standardDeviation4 += std::pow(image.pixel(x + 1, y - 1).r - averageColor4.r, 2);
+                standardDeviation4 = standardDeviation4 / 4.f;
+                standardDeviation4 = std::sqrt(standardDeviation4);
+            }
+
+            float minStandardDeviation = std::min(std::min(standardDeviation1, standardDeviation2), std::min(standardDeviation3, standardDeviation4));
+
+            if (minStandardDeviation == standardDeviation1)
+            {
+                kuwaharaImage.pixel(x, y) = averageColor1;
+            }
+            else if (minStandardDeviation == standardDeviation2)
+            {
+                kuwaharaImage.pixel(x, y) = averageColor2;
+            }
+            else if (minStandardDeviation == standardDeviation3)
+            {
+                kuwaharaImage.pixel(x, y) = averageColor3;
+            }
+            else if (minStandardDeviation == standardDeviation4)
+            {
+                kuwaharaImage.pixel(x, y) = averageColor4;
+            }
+        }
+    }
+    return kuwaharaImage;
+}
 
 int main()
 {
@@ -570,7 +691,7 @@ int main()
     {
         // Separation matrix (more efficient)
         std::vector<std::vector<float>> kernelBlurHorizontal{{1, 1, 1}};
-        std::vector<std::vector<float>> kernelBlurVertical {{1}, {1}, {1}};
+        std::vector<std::vector<float>> kernelBlurVertical{{1}, {1}, {1}};
         sil::Image blurImage{convolution(image, kernelBlurHorizontal)};
         blurImage = convolution(blurImage, kernelBlurVertical);
         blurImage.save("output/exercice19FiltreSepare.png");
@@ -580,5 +701,10 @@ int main()
 
         sil::Image imageDifference{differenceGaussian(photo, 1, 5)};
         imageDifference.save("output/exercice19Difference.png");
+    }
+
+    {
+        sil::Image imageKuwahara{kuwahara(photo)};
+        imageKuwahara.save("output/exercice20.png");
     }
 }
