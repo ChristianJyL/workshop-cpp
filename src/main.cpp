@@ -5,7 +5,6 @@
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include <utility>
 
-
 void allGreen(sil::Image &image)
 {
     for (glm::vec3 &color : image.pixels())
@@ -447,7 +446,7 @@ std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
 {
     sil::Image kuwaharaImage{image.width(), image.height()};
 
-    std::vector<std::pair<glm::vec3,float>> listRegion;
+    std::vector<std::pair<glm::vec3, float>> listRegion;
     std::pair<glm::vec3, float> pair;
 
     for (int x{0}; x < image.width(); x++)
@@ -455,16 +454,8 @@ std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
         for (int y{0}; y < image.height(); y++)
         {
 
-
-
             glm::vec3 averageColor{};
-            glm::vec3 averageColor2{};
-            glm::vec3 averageColor3{};
-            glm::vec3 averageColor4{};
             float standardDeviation{0};
-            float standardDeviation2{0};
-            float standardDeviation3{0};
-            float standardDeviation4{0};
 
             if (x - 2 > 0 && x - 1 > 0 && y + 1 < image.height() && y + 2 < image.height())
             {
@@ -482,7 +473,7 @@ std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
                 standardDeviation = std::sqrt(standardDeviation);
 
                 pair.first = averageColor;
-                pair.second= standardDeviation;
+                pair.second = standardDeviation;
                 listRegion.push_back(pair);
             }
 
@@ -492,71 +483,70 @@ std::vector<std::vector<float>> generateKernelBlurHorizontal(int size)
                 averageColor += image.pixel(x + 2, y + 1);
                 averageColor += image.pixel(x + 1, y + 2);
                 averageColor += image.pixel(x + 1, y + 1);
-                averageColor = averageColor2 / 4.f;
+                averageColor = averageColor / 4.f;
 
-                standardDeviation2 = std::pow(image.pixel(x + 2, y + 2).r - averageColor2.r, 2);
-                standardDeviation2 += std::pow(image.pixel(x + 2, y + 1).r - averageColor2.r, 2);
-                standardDeviation2 += std::pow(image.pixel(x + 1, y + 2).r - averageColor2.r, 2);
-                standardDeviation2 += std::pow(image.pixel(x + 1, y + 1).r - averageColor2.r, 2);
-                standardDeviation2 = standardDeviation2 / 4.f;
-                standardDeviation2 = std::sqrt(standardDeviation2);
+                standardDeviation = std::pow(image.pixel(x + 2, y + 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x + 2, y + 1).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x + 1, y + 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x + 1, y + 1).r - averageColor.r, 2);
+                standardDeviation = standardDeviation / 4.f;
+                standardDeviation = std::sqrt(standardDeviation);
 
                 pair.first = averageColor;
-                pair.second= standardDeviation;
+                pair.second = standardDeviation;
                 listRegion.push_back(pair);
             }
 
             if (x - 2 > 0 && x - 1 > 0 && y - 1 > 0 && y - 2 > 0)
             {
-                averageColor3 = image.pixel(x - 2, y - 2);
-                averageColor3 += image.pixel(x - 2, y - 1);
-                averageColor3 += image.pixel(x - 1, y - 2);
-                averageColor3 += image.pixel(x - 1, y - 1);
-                averageColor3 = averageColor3 / 4.f;
+                averageColor = image.pixel(x - 2, y - 2);
+                averageColor += image.pixel(x - 2, y - 1);
+                averageColor += image.pixel(x - 1, y - 2);
+                averageColor += image.pixel(x - 1, y - 1);
+                averageColor = averageColor / 4.f;
 
-                standardDeviation3 = std::pow(image.pixel(x - 2, y - 2).r - averageColor3.r, 2);
-                standardDeviation3 += std::pow(image.pixel(x - 2, y - 1).r - averageColor3.r, 2);
-                standardDeviation3 += std::pow(image.pixel(x - 1, y - 2).r - averageColor3.r, 2);
-                standardDeviation3 += std::pow(image.pixel(x - 1, y - 1).r - averageColor3.r, 2);
+                standardDeviation = std::pow(image.pixel(x - 2, y - 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x - 2, y - 1).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x - 1, y - 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x - 1, y - 1).r - averageColor.r, 2);
 
-                standardDeviation3 = standardDeviation3 / 4.f;
-                standardDeviation3 = std::sqrt(standardDeviation3);
+                standardDeviation = standardDeviation / 4.f;
+                standardDeviation = std::sqrt(standardDeviation);
+
+                pair.first = averageColor;
+                pair.second = standardDeviation;
+                listRegion.push_back(pair);
             }
 
             if (x + 2 < image.width() && x + 1 < image.width() && y - 1 > 0 && y - 2 > 0)
             {
-                averageColor4 = image.pixel(x + 2, y - 2);
-                averageColor4 += image.pixel(x + 2, y - 1);
-                averageColor4 += image.pixel(x + 1, y - 2);
-                averageColor4 += image.pixel(x + 1, y - 1);
-                averageColor4 = averageColor4 / 4.f;
+                averageColor = image.pixel(x + 2, y - 2);
+                averageColor += image.pixel(x + 2, y - 1);
+                averageColor += image.pixel(x + 1, y - 2);
+                averageColor += image.pixel(x + 1, y - 1);
+                averageColor = averageColor / 4.f;
 
-                standardDeviation4 = std::pow(image.pixel(x + 2, y - 2).r - averageColor4.r, 2);
-                standardDeviation4 += std::pow(image.pixel(x + 2, y - 1).r - averageColor4.r, 2);
-                standardDeviation4 += std::pow(image.pixel(x + 1, y - 2).r - averageColor4.r, 2);
-                standardDeviation4 += std::pow(image.pixel(x + 1, y - 1).r - averageColor4.r, 2);
-                standardDeviation4 = standardDeviation4 / 4.f;
-                standardDeviation4 = std::sqrt(standardDeviation4);
+                standardDeviation = std::pow(image.pixel(x + 2, y - 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x + 2, y - 1).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x + 1, y - 2).r - averageColor.r, 2);
+                standardDeviation += std::pow(image.pixel(x + 1, y - 1).r - averageColor.r, 2);
+                standardDeviation = standardDeviation / 4.f;
+                standardDeviation = std::sqrt(standardDeviation);
+
+                pair.first = averageColor;
+                pair.second = standardDeviation;
+                listRegion.push_back(pair);
             }
 
-            float minStandardDeviation = std::min(std::min(standardDeviation1, standardDeviation2), std::min(standardDeviation3, standardDeviation4));
-
-            if (minStandardDeviation == standardDeviation1)
-            {
-                kuwaharaImage.pixel(x, y) = averageColor1;
+            float minStandardDeviation {listRegion[0].second};
+            for (std::pair onePair : listRegion){
+                if (onePair.second < minStandardDeviation){
+                    minStandardDeviation = onePair.second;
+                    averageColor = onePair.first;
+                }
             }
-            else if (minStandardDeviation == standardDeviation2)
-            {
-                kuwaharaImage.pixel(x, y) = averageColor2;
-            }
-            else if (minStandardDeviation == standardDeviation3)
-            {
-                kuwaharaImage.pixel(x, y) = averageColor3;
-            }
-            else if (minStandardDeviation == standardDeviation4)
-            {
-                kuwaharaImage.pixel(x, y) = averageColor4;
-            }
+            kuwaharaImage.pixel(x,y) = averageColor;
+            listRegion.clear();
         }
     }
     return kuwaharaImage;
@@ -566,7 +556,7 @@ int main()
 {
     sil::Image image{"images/logo.png"};
     sil::Image photo{"images/photo.jpg"};
-
+/*
     {
         sil::Image copy{image};
         allGreen(copy);
@@ -701,7 +691,7 @@ int main()
 
         sil::Image imageDifference{differenceGaussian(photo, 1, 5)};
         imageDifference.save("output/exercice19Difference.png");
-    }
+    }*/
 
     {
         sil::Image imageKuwahara{kuwahara(photo)};
