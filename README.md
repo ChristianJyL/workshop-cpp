@@ -33,6 +33,7 @@
   - [NIVEAU 5](#niveau-5)
     - [Filtre de Kuwahara (effet peinture à huile) 🖌️](#filtre-de-kuwahara-effet-peinture-à-huile-️)
     - [Diamond Square 🔷🟦](#diamond-square-)
+  - [AUTRE...](#autre)
 
 
 ## NIVEAU 1
@@ -169,7 +170,6 @@
 
 **Méthode :** Il suffit qu'à chaque colonne paire, on reproduit l'image de départ en partant de la droite (image.width() - newX -1 ). Et on fait le même principe lorsque nous sommes dans une ligne paire.
 
-**Piège :** Si t'en trouves
 
 ### Glitch
 
@@ -296,8 +296,11 @@ Il faut aussi faire attention aux indices négatifs avec nos tableaux...
 **Remarque :** On a essayé de reproduire le code de la vidéo dans les grandes lignes mais le résultat n'est pas exactement celui attendu.
 
 
+---
 
-<details><summary>Résultats intermédiaire et/ou intéressant,drôle !</summary>
+## AUTRE...
+
+<details><summary>Résultats intermédiaires et/ou intéressants,drôles !</summary>
 
 | ![image](./output/exercice15creepy.png) |
 | :-------------------------------------: |
@@ -326,3 +329,6 @@ Il faut aussi faire attention aux indices négatifs avec nos tableaux...
 **Remarque :** Ah bah d'accord, là, on a carrément un sharingan 😆
 
 </details>
+
+---
+Le repository git de Théo : https://github.com/fochyl/bonnot/
