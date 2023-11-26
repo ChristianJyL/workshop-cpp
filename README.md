@@ -35,7 +35,7 @@
     - [Diamond Square 🔷🟦](#diamond-square-)
   - [AUTRE...](#autre)
 
-
+NB : Ce projet a été codé sous Linux. Il est possible qu'il y ait des imprévus sur Windows.
 ## NIVEAU 1
 
 ### Ne gardez que le vert 🟢
