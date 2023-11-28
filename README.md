@@ -78,8 +78,7 @@ NB : Ce projet a été codé sous Linux. Il est possible qu'il y ait des imprév
 
 **Méthode :** On parcourt les colonnes une à une. Pour chacune d'entre elles, on définit une valeur allant du noir au blanc en fonction de la position du *x* sur la largeur totale de l'image.
 
-**Piège :** Il faut bien penser à convertir les *x* en *float* grâce à un *static_cast* pour définir les niveaux de gris.
-
+**Piège :** Il faut bien penser à convertir les *x* en *float* grâce à un *static_cast* pour définir les niveaux de gris. <!-- Sinon quoi ? Si cette remarque était un commentaire dans le code, elle n'aiderait pas la personne lisant le code à comprendre l'utilité du static_cast. https://youtu.be/b4p_tcLYDV0?t=440 -->
 ---
 
 ## NIVEAU 2
