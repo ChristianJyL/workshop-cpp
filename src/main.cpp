@@ -113,14 +113,8 @@ void noise(sil::Image &image)
             {
                 final_x_forward = image.width() - 1;
             }
-            if (x - 30 >= 0)
-            {
-                final_x_backward = x - 30;
-            }
-            else
-            {
-                final_x_backward = 0;
-            }
+            // Manière équivalente et plus concise d'écrire ton if / else : (et on aurait pu faire la même chose au dessus)
+            final_x_backward = std::max(x - 30, 0);
 
             // int const final_x = x + 30 <= image.width() - 1
             //                         ? x + 30
@@ -171,6 +165,7 @@ void circle(sil::Image &image, int const &rayon, float const &thickess, int cons
     {
         for (int y{0}; y < image.height(); y++)
         {
+            // Tu fais deux fois le calcul `std::pow(x - center_x, 2) + std::pow(y - center_y, 2)`, donc tu aurais pu ne le faire qu'une seule fois et le stocker dans une variable, pour ensuite utiliser cette variable deux fois. Ca fait moins de calculs, et un code plus lisible.
             if ((std::pow(x - center_x, 2) + std::pow(y - center_y, 2) < std::pow(rayon, 2) + thickess) && (std::pow(x - center_x, 2) + std::pow(y - center_y, 2) > std::pow(rayon, 2) - thickess)) // si le pixel est dans le cercle et qu'il est dans l'épaisseur du cercle
             {
                 image.pixel(x, y) = glm::vec3(1); // on met le pixel en blanc
@@ -300,7 +295,7 @@ void glitch2(sil::Image &image, int const &number_of_glitch, int const &width, i
             }
             else
             {
-                fractaleImage.pixel(x, y) = glm::vec3(0 + i * 0.02);
+                fractaleImage.pixel(x, y) = glm::vec3(0 + i * 0.02); // Que représente ce 0.02 ? 1 / 50 ? Il aurait été bon de faire une variable pour stocker le 50, et réutiliser cette variable ici
             }
         }
     }
@@ -374,7 +369,7 @@ void dithering(sil::Image &image)
 }
 
 //-------------------------------------------------------------------------------------------------------------
-float lum(int const &x, int const &y, sil::Image const &photo)
+float lum(int const &x, int const &y, sil::Image const &photo) // Cette fonction devrait directement prendre une couleur en paramètre (glm::vec3) plutôt qu'une image et des coordonnées de pixels. Ca rendrait la fonction plus simple à utiliser, et aussi plus générique (pas besoin d'avoir une image, on peut aussi utiliser cette fonction si on a juste hardcodé une couleur quelque part par exemple).
 {
     float lum = (photo.pixel(x, y).r + photo.pixel(x, y).g + photo.pixel(x, y).b) / 3;
     return lum;
@@ -413,10 +408,10 @@ void normalisation(sil::Image &photo)
 
 [[nodiscard]] sil::Image convolution(sil::Image const &image, std::vector<std::vector<float>> const &kernel)
 {
-    sil::Image blurImage{image};
+    sil::Image blurImage{image}; // La variable ne devrait pas s'appeler blurImage puisqu'on est dans le code de convolution générique, qui ne fait pas forcément un flou
 
     float kernelTotal{0};
-    for (std::vector<float> line : kernel)
+    for (std::vector<float> const& line : kernel) // Il est mieux de mettre un const& pour éviter une copie inutile, surtout qu'une ligne d'un kernel peut être grosse (5 float, voire beaucoup +)
     {
         for (float number : line)
         {
@@ -449,7 +444,7 @@ void normalisation(sil::Image &photo)
             }
             if (kernelTotal != 0)
             {
-                color = color / kernelTotal;
+                color = color / kernelTotal; // Dans la version générique de la convolution on ne veut pas forcément faire cette normalisation, c'est spécifique au blur. Cette normalisation sert à préserver la luminosité de l'image ; or dans certains kernels on veut justement augmenter ou baisser la luminosité.
             }
             blurImage.pixel(x, y) = color;
         }
@@ -545,7 +540,7 @@ struct Region
                 {
                     glm::vec3 averageColor{};
                     float standardDeviation{};
-                    for (int i{offsetX}; i < offsetX + 2; i++)
+                    for (int i{offsetX}; i < offsetX + 2; i++) // Normalement, le pixel à l'offset (0, 0) doit être pris en compte dans les quatre régions, mais toi tu ne le met dans aucune région (tu fais -2 et -1, puis 1 et 2) C'est peut-être ça qui fait que ton résultat n'est pas aussi smooth qu'il pourrait l'être.
                     {
                         for (int j{offsetY}; j < offsetY + 2; j++)
                         {
@@ -577,7 +572,7 @@ struct Region
             // on cherche la région avec la plus petite déviation standard (on pourrait faire une fonction pour ça)
             float minStandardDeviation{listRegion[0].standart_deviation_region};
             glm::vec3 color{listRegion[0].average_color_region};
-            for (Region regionOfList : listRegion)
+            for (Region const& regionOfList : listRegion)
             {
                 if (regionOfList.standart_deviation_region < minStandardDeviation)
                 {
